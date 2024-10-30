@@ -8,8 +8,10 @@
 ///                                                         ///
 ///////////////////////////////////////////////////////////////
 
+///  This plugin only works from scanner plugin version 2.8a !!!
+
 const PORT = 2000; 		// Port on which the server should run
-let LogInterval = 240; 	// Specify here in minutes when a log entry can be sent again (default: 60, minimum 60)
+let LogInterval = 60; 	// Specify here in minutes when a log entry can be sent again (default: 60, minimum 60)
 
 ///////////////////////////////////////////////////////////////
 
