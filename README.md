@@ -14,8 +14,9 @@ When using multiple web servers, it is recommended to use a central server to ma
 
 ## Notes: 
 
-- Please do not delete canlog.js even if it is empty!
-- Please enter Server:Port (e.g. 127.0.0.1:2000) in the JSON configuration file of the scanner plugin.
+- Do not delete canlog.js even if it is empty!
+- Please enter Server:Port (e.g. 127.0.0.1:2000) in the JSON configuration file of the scanner plugin
+- When the server is used, the log interval set in the scanner.json is inactive because the log interval set for the server takes precedence
   
 ## Configuration options:
 
