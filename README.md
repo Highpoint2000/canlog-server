@@ -22,4 +22,4 @@ When using multiple web servers, it is recommended to use a central server to ma
 The following variables can be changed in the header of the canlog_server.js:
 
     const PORT = 2000; 		// Port on which the server should run
-    let LogInterval = 240;     	// Specify here in minutes when a log entry can be sent again (default: 60, minimum 60)
+    let LogInterval = 60;     	// Specify here in minutes when a log entry can be sent again (default: 60, minimum 60)
