@@ -1,5 +1,5 @@
 # CanLogServer Plugin for [FM-DX-Webserver](https://github.com/NoobishSVK/fm-dx-webserver)
-This plugin provides a central server to manage the logs that have been send automatic over the [scanner plugin](https://github.com/Highpoint2000/webserver-scanner).
+This plugin provides a central server to manage the FMLIST logs that have been send automatic over the [scanner plugin](https://github.com/Highpoint2000/webserver-scanner).
 
 ## Version 1.0
 
