@@ -3,6 +3,8 @@ This plugin provides a central server to manage the logs that have been send aut
 
 ## Version 1.0
 
+When using multiple web servers, it is recommended to use a central server to manage the FMLIST log entries. The CanLogServer prevents multiple web servers from entering the same station into the FMLIST database at the same time interval.
+
 ## Installation notes:
 
 1. [Download](https://github.com/Highpoint2000/canlog-server/releases) the last repository as a zip
@@ -13,7 +15,8 @@ This plugin provides a central server to manage the logs that have been send aut
 ## Notes: 
 
 - Please do not delete canlog.js even if it is empty!
-
+- Please enter Server:Port (e.g. 127.0.0.1:2000) in the JSON configuration file of the scanner plugin.
+  
 ## Configuration options:
 
 The following variables can be changed in the header of the canlog_server.js:
