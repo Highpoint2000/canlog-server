@@ -19,4 +19,4 @@ This plugin provides a central server to manage the logs that have been send aut
 The following variables can be changed in the header of the canlog_server.js:
 
     const PORT = 2000; 		// Port on which the server should run
-    let LogInterval = 240; 	// Specify here in minutes when a log entry can be sent again (default: 60, minimum 60)
+    let LogInterval = 240;     	// Specify here in minutes when a log entry can be sent again (default: 60, minimum 60)
