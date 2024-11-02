@@ -3,7 +3,7 @@ This plugin provides a central server to manage the FMLIST logs and DX alerts.
 
 ## Version 2.0
 
-When using multiple web servers with DX-Alert Plugins, it is recommended to use also a central server to manage the alarms.
+- Added management for the alarms of the DX-Alert plugin
 
 ## Installation notes:
 
