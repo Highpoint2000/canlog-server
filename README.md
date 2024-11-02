@@ -1,7 +1,7 @@
 # CanLogServer Plugin for [FM-DX-Webserver](https://github.com/NoobishSVK/fm-dx-webserver)
 This plugin provides a central server to manage the FMLIST logs and DX alerts.
 
-## Version 2.0
+## Version 2.0 (only works from Scanner plugin version 2.8c and DX-Alert plugin 3.4  !!!)
 
 - Added management for the alarms of the DX-Alert plugin
 
