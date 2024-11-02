@@ -1,17 +1,18 @@
 ///////////////////////////////////////////////////////////////
 ///                                                         ///
-///  CANLOG SERVER SCRIPT FOR FM-DX-WEBSERVER (V1.0)        ///
+///  CANLOG SERVER SCRIPT FOR FM-DX-WEBSERVER (V2.0)        ///
 ///                                                         ///
-///  by Highpoint               last update: 30.10.24       ///
+///  by Highpoint               last update: 02.11.24       ///
 ///                                                         ///
 ///  https://github.com/Highpoint2000/canlog-server         ///
 ///                                                         ///
 ///////////////////////////////////////////////////////////////
 
-///  This plugin only works from scanner plugin version 2.8a !!!
+///  This plugin only works from Scanner plugin version 2.8c and DX-Alert plugin 3.4  !!!
 
-const PORT = 2000; 		// Port on which the server should run
-let LogInterval = 60; 	// Specify here in minutes when a log entry can be sent again (default: 60, minimum 60)
+const PORT = 2000; 				// Port on which the server should run
+let LogInterval_FMLIST = 480; 	// Specify here in minutes when a log entry can be sent again (default: 60, minimum 60, off: 0)
+let LogInterval_DXALERT = 480; 	// Specify here in minutes when a alarm entry can be sent again (default: 60, minimum 2, off: 0))
 
 ///////////////////////////////////////////////////////////////
 
@@ -51,41 +52,96 @@ const express = require('express');
 const app = express();
 app.use(express.json()); // Middleware for parsing JSON requests
 
-if (LogInterval < 60 || LogInterval === '' || LogInterval === undefined) {
-    LogInterval = 60;
+if ((LogInterval_FMLIST < 60 && LogInterval_FMLIST !== 0) || LogInterval_FMLIST === '' || LogInterval_FMLIST === undefined) {
+    LogInterval_FMLIST = 60;
+}
+if ((LogInterval_DXALERT < 2 && LogInterval_DXALERT !== 0) || LogInterval_DXALERT === '' || LogInterval_DXALERT === undefined) {
+    LogInterval_DXALERT = 2;
 }
 
 // Object to store logs
-let logHistory = {};
+let logHistoryFMLIST = {};
+let logHistoryDXALERT = {};
 
-// Function to check logging permission
-function canLog(stationid) {
+// Function to check logging permission for FMLIST
+function canLogFMLIST(stationid) {
     const now = Date.now();
-    const logMinutes = 60 * LogInterval * 1000; 
+    const logMinutes = 60 * LogInterval_FMLIST * 1000; 
 
-    if (logHistory[stationid] && (now - logHistory[stationid]) < logMinutes) {
+    if (logHistoryFMLIST[stationid] && (now - logHistoryFMLIST[stationid]) < logMinutes) {
         return false; // Deny logging if less than x minutes have passed
     }
 
-    logHistory[stationid] = now; // Update with the current timestamp
+    logHistoryFMLIST[stationid] = now; // Update with the current timestamp
     return true; // Logging allowed
 }
 
-// Endpoint for logging
-app.post('/log/:stationid', (req, res) => {
-    const stationid = req.params.stationid;
-    const loggingAllowed = canLog(stationid);
+// Function to check logging permission for DXALERT
+function canLogDXALERT(stationid) {
+    const now = Date.now();
+    const logMinutes = 60 * LogInterval_DXALERT * 1000; 
 
-    if (loggingAllowed) {
-        // logInfo(`Logging allowed for ${stationid}`);
-        res.status(200).send(`Logging allowed for ${stationid}`);
-    } else {
-        // logInfo(`ID ${stationid} was already logged recently.`);
-        res.status(429).send(`ID ${stationid} was already logged recently.`);
+    if (logHistoryDXALERT[stationid] && (now - logHistoryDXALERT[stationid]) < logMinutes) {
+        return false; // Deny logging if less than x minutes have passed
     }
+
+    logHistoryDXALERT[stationid] = now; // Update with the current timestamp
+    return true; // Logging allowed
+}
+
+// Endpoint for logging FMLIST
+if (LogInterval_DXALERT !== 0) {
+	
+	app.post('/fmlist/:stationid', (req, res) => {
+		const stationid = req.params.stationid;
+		const loggingAllowed = canLogFMLIST(stationid);
+
+		if (loggingAllowed) {
+			// logInfo(`Logging allowed for ${stationid} on FMLIST`);
+			res.status(200).send(`Logging allowed for ${stationid} on FMLIST`);
+		} else {
+			// logInfo(`ID ${stationid} was already logged recently on FMLIST.`);
+			res.status(429).send(`ID ${stationid} was already logged recently on FMLIST.`);
+		}
+	});
+}
+
+// Endpoint for logging DXALERT
+if (LogInterval_DXALERT !== 0) {
+
+	app.post('/dxalert/:stationid', (req, res) => {
+		const stationid = req.params.stationid;
+		const loggingAllowed = canLogDXALERT(stationid);
+
+		if (loggingAllowed) {
+			// logInfo(`Alert allowed for ${stationid} on DXALERT`);
+			res.status(200).send(`Alert allowed for ${stationid}`);
+		} else {
+			// logInfo(`ID ${stationid} was already logged recently on DXALERT.`);
+			res.status(429).send(`Alert for ID ${stationid} was already sent recently.`);
+		}
+	});
+	
+}
+
+// Endpoint to get the LogInterval for FMLIST
+app.get('/loginterval/fmlist', (req, res) => {
+    res.json({ LogInterval_FMLIST });
+});
+
+// Endpoint to get the LogInterval for DXALERT
+app.get('/loginterval/dxalert', (req, res) => {
+    res.json({ LogInterval_DXALERT });
 });
 
 // Start the server
 app.listen(PORT, () => {
-logInfo(`CanLogServer is running on http://localhost:${PORT} with ${LogInterval} min. logging interval`);
+	if (LogInterval_FMLIST !== 0) {
+		logInfo(`CanLogServer is running on http://localhost:${PORT}/fmlist with ${LogInterval_FMLIST} min. logging interval`); 
+	}
+	if (LogInterval_DXALERT !== 0) {
+		logInfo(`CanLogServer is running on http://localhost:${PORT}/dxalert with ${LogInterval_DXALERT} min. logging interval`);
+	}
 });
+
+
