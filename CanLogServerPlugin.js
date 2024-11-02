@@ -1,7 +1,7 @@
 // Plugin configuration, this is used in the administration when plugins are loaded
 var pluginConfig = {
     name: 'CanLogServer Plugin',
-    version: '1.0',
+    version: '2.0',
     author: 'Highpoint',
     frontEndPath: 'CanLogServer/canlog.js'
 }
