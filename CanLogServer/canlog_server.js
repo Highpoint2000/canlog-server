@@ -8,9 +8,9 @@
 ///                                                         /// 
 ///////////////////////////////////////////////////////////////
 
-const PORT = 2000;                // Port on which the server should run
-let LogInterval_FMLIST = 480;    // Specify here in minutes when a log entry can be sent again (default: 60, minimum 60, off: 0)
-let LogInterval_DXALERT = 480;   // Specify here in minutes when an alarm entry can be sent again (default: 60, minimum 2, off: 0)
+const PORT = 2000;            	// Port on which the server should run
+let LogInterval_FMLIST = 60;    // Specify here in minutes when a log entry can be sent again (default: 60, minimum 60, off: 0)
+let LogInterval_DXALERT = 60;   // Specify here in minutes when an alarm entry can be sent again (default: 60, minimum 2, off: 0)
 
 const path = require('path');
 const fs = require('fs');
