@@ -1,9 +1,9 @@
 # CanLogServer Plugin for [FM-DX-Webserver](https://github.com/NoobishSVK/fm-dx-webserver)
 This plugin provides a central server to manage the FMLIST logs and DX alerts.
 
-## Version 2.0 (only works from Scanner plugin version 2.8c and DX-Alert plugin 3.4  !!!)
+## Version 2.1 (only works from Scanner plugin version 2.8c and DX-Alert plugin 3.4  !!!)
 
-- Added management for the alarms of the DX-Alert plugin
+- Local storage of history to restore it on reboot
 
 ## Installation notes:
 
@@ -27,6 +27,10 @@ The following variables can be changed in the header of the canlog_server.js:
 	let LogInterval_DXALERT = 60; 	// Specify here in minutes when a alarm entry can be sent again (default: 60, minimum 2, off: 0)) ---> für DX-Alert Plugin!
 
 ## History:
+
+### Version 2.0 (only works from Scanner plugin version 2.8c and DX-Alert plugin 3.4  !!!)
+
+- Added management for the alarms of the DX-Alert plugin
 
 ### Version 1.0
 
