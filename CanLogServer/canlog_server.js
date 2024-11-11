@@ -2,29 +2,29 @@
 ///                                                         ///
 ///  CANLOG SERVER SCRIPT FOR FM-DX-WEBSERVER (V2.1)        ///
 ///                                                         ///
-///  by Highpoint               last update: 06.11.24       ///
+///  by Highpoint               last update: 11.11.24       ///
 ///                                                         ///
 ///  https://github.com/Highpoint2000/canlog-server         ///
 ///                                                         /// 
 ///////////////////////////////////////////////////////////////
 
 const PORT = 2000;            	// Port on which the server should run
-let LogInterval_FMLIST = 60;    // Specify here in minutes when a log entry can be sent again (default: 60, minimum 60, off: 0)
-let LogInterval_DXALERT = 60;   // Specify here in minutes when an alarm entry can be sent again (default: 60, minimum 2, off: 0)
+let LogInterval_FMLIST = 60;    // Specify here in minutes when a log entry can be sent again (default: 30, minimum 30, off: 0)
+let LogInterval_DXALERT = 60;   // Specify here in minutes when an alert entry can be sent again (default: 60, minimum 1, off: 0)
 
 const path = require('path');
 const fs = require('fs');
-const { logInfo, logError } = require('./../../server/console');
 const { execSync } = require('child_process');
+const express = require('express');
+const { logInfo, logError } = require('./../../server/console');
 
-const NewModules = [
-    'jsdom',
-    'express',
-];
+// File path for the log history
+const logHistoryFilePath = path.join(__dirname, 'logHistory.json');
 
-const logFilePath = path.join(__dirname, 'logHistory.json');
+// List of required modules
+const NewModules = ['jsdom', 'express'];
 
-// Function to check and install missing NewModules
+// Function to check and install missing modules
 function checkAndInstallNewModules() {
     NewModules.forEach(module => {
         const modulePath = path.join(__dirname, './../../node_modules', module);
@@ -35,85 +35,113 @@ function checkAndInstallNewModules() {
                 logInfo(`Module ${module} installed successfully.`);
             } catch (error) {
                 logError(`Error installing module ${module}:`, error);
-                process.exit(1); // Exit the process with an error code
+                process.exit(1);
             }
         }
     });
 }
 
-// Load log history from file
-function loadLogHistory() {
-    if (fs.existsSync(logFilePath)) {
-        const data = fs.readFileSync(logFilePath, 'utf8');
-        const parsedData = JSON.parse(data);
-        logHistoryFMLIST = parsedData.logHistoryFMLIST || {};
-        logHistoryDXALERT = parsedData.logHistoryDXALERT || {};
-        logInfo("Log history loaded from file.");
-    } else {
-        logHistoryFMLIST = {};
-        logHistoryDXALERT = {};
-        logInfo("No log history file found, starting with empty history.");
-    }
-}
-
-// Save log history to file
-function saveLogHistory() {
-    const data = {
-        logHistoryFMLIST,
-        logHistoryDXALERT
-    };
-    fs.writeFileSync(logFilePath, JSON.stringify(data), 'utf8');
-    logInfo("Log history saved to file.");
-}
-
-// Check and install missing NewModules before starting the server
-checkAndInstallNewModules();
-
-const express = require('express');
-const app = express();
-app.use(express.json()); // Middleware for parsing JSON requests
-
-if ((LogInterval_FMLIST < 60 && LogInterval_FMLIST !== 0) || LogInterval_FMLIST === '' || LogInterval_FMLIST === undefined) {
-    LogInterval_FMLIST = 60;
-}
-if ((LogInterval_DXALERT < 2 && LogInterval_DXALERT !== 0) || LogInterval_DXALERT === '' || LogInterval_DXALERT === undefined) {
-    LogInterval_DXALERT = 2;
-}
-
-// Object to store logs
+// Initialization of log history
 let logHistoryFMLIST = {};
 let logHistoryDXALERT = {};
+let isLogHistoryUpdated = false;
 
-// Load existing log history
-loadLogHistory();
+// Function to load log history from the file
+function loadLogHistory() {
+    if (fs.existsSync(logHistoryFilePath)) {
+        try {
+            const data = fs.readFileSync(logHistoryFilePath, 'utf8');
+            const parsedData = JSON.parse(data);
+            logHistoryFMLIST = parsedData.fmlist || {};
+            logHistoryDXALERT = parsedData.dxalert || {};
+        } catch (error) {
+            logError('Error loading log history from file:', error);
+        }
+    }
+}
 
-// Function to check logging permission for FMLIST
+// Function to save log history to the file
+function saveLogHistory() {
+    if (isLogHistoryUpdated) {
+        const data = {
+            fmlist: logHistoryFMLIST,
+            dxalert: logHistoryDXALERT
+        };
+        try {
+            fs.writeFileSync(logHistoryFilePath, JSON.stringify(data, null, 4));
+            isLogHistoryUpdated = false;
+        } catch (error) {
+            logError('Error saving log history to file:', error);
+        }
+    }
+}
+
+// Function to check if FMLIST entries can be logged
 function canLogFMLIST(stationid) {
     const now = Date.now();
-    const logMinutes = 60 * LogInterval_FMLIST * 1000; 
+    const logIntervalMs = LogInterval_FMLIST * 60 * 1000;
 
-    if (logHistoryFMLIST[stationid] && (now - logHistoryFMLIST[stationid]) < logMinutes) {
-        return false; // Deny logging if less than x minutes have passed
+    if (logHistoryFMLIST[stationid] && (now - logHistoryFMLIST[stationid]) < logIntervalMs) {
+        return false;
     }
 
-    logHistoryFMLIST[stationid] = now; // Update with the current timestamp
-    saveLogHistory(); // Save updated log history
-    return true; // Logging allowed
+    logHistoryFMLIST[stationid] = now;
+    isLogHistoryUpdated = true;
+    return true;
 }
 
-// Function to check logging permission for DXALERT
+// Function to check if DXALERT entries can be logged
 function canLogDXALERT(stationid) {
     const now = Date.now();
-    const logMinutes = 60 * LogInterval_DXALERT * 1000; 
+    const logIntervalMs = LogInterval_DXALERT * 60 * 1000;
 
-    if (logHistoryDXALERT[stationid] && (now - logHistoryDXALERT[stationid]) < logMinutes) {
-        return false; // Deny logging if less than x minutes have passed
+    if (logHistoryDXALERT[stationid] && (now - logHistoryDXALERT[stationid]) < logIntervalMs) {
+        return false;
     }
 
-    logHistoryDXALERT[stationid] = now; // Update with the current timestamp
-    saveLogHistory(); // Save updated log history
-    return true; // Logging allowed
+    logHistoryDXALERT[stationid] = now;
+    isLogHistoryUpdated = true;
+    return true;
 }
+
+// Function to clean up expired entries in log history
+function cleanUpExpiredLogs() {
+    const now = Date.now();
+    let hasChanges = false;
+
+    for (let stationid in logHistoryFMLIST) {
+        const logIntervalMs = LogInterval_FMLIST * 60 * 1000;
+        if (now - logHistoryFMLIST[stationid] >= logIntervalMs) {
+            delete logHistoryFMLIST[stationid];
+            hasChanges = true;
+        }
+    }
+
+    for (let stationid in logHistoryDXALERT) {
+        const logIntervalMs = LogInterval_DXALERT * 60 * 1000;
+        if (now - logHistoryDXALERT[stationid] >= logIntervalMs) {
+            delete logHistoryDXALERT[stationid];
+            hasChanges = true;
+        }
+    }
+
+    if (hasChanges) {
+        isLogHistoryUpdated = true;
+        saveLogHistory();
+    }
+}
+
+// Validation of logging interval settings
+if ((LogInterval_FMLIST < 30 && LogInterval_FMLIST !== 0) || LogInterval_FMLIST === '' || LogInterval_FMLIST === undefined) {
+    LogInterval_FMLIST = 30;  // Enforce minimum of 30 minutes for LogInterval_FMLIST
+}
+if ((LogInterval_DXALERT < 1 && LogInterval_DXALERT !== 0) || LogInterval_DXALERT === '' || LogInterval_DXALERT === undefined) {
+    LogInterval_DXALERT = 1;
+}
+
+// Express setup
+const app = express();
+app.use(express.json());
 
 // Endpoint for logging FMLIST
 if (LogInterval_FMLIST !== 0) {
@@ -126,6 +154,8 @@ if (LogInterval_FMLIST !== 0) {
         } else {
             res.status(429).send(`ID ${stationid} was already logged recently on FMLIST.`);
         }
+
+        saveLogHistory();
     });
 }
 
@@ -140,25 +170,33 @@ if (LogInterval_DXALERT !== 0) {
         } else {
             res.status(429).send(`Alert for ID ${stationid} was already sent recently.`);
         }
+
+        saveLogHistory();
     });
 }
 
-// Endpoint to get the LogInterval for FMLIST
+// Endpoints for querying log intervals
 app.get('/loginterval/fmlist', (req, res) => {
     res.json({ LogInterval_FMLIST });
 });
 
-// Endpoint to get the LogInterval for DXALERT
 app.get('/loginterval/dxalert', (req, res) => {
     res.json({ LogInterval_DXALERT });
 });
 
-// Start the server
+// Starting the server
 app.listen(PORT, () => {
+    checkAndInstallNewModules();
+    loadLogHistory();
+    cleanUpExpiredLogs();
+
     if (LogInterval_FMLIST !== 0) {
-        logInfo(`CanLogServer is running on http://localhost:${PORT}/fmlist with ${LogInterval_FMLIST} min. logging interval`); 
+        logInfo(`CanLogServer is running on http://localhost:${PORT}/fmlist with ${LogInterval_FMLIST} min. logging interval`);
     }
     if (LogInterval_DXALERT !== 0) {
         logInfo(`CanLogServer is running on http://localhost:${PORT}/dxalert with ${LogInterval_DXALERT} min. logging interval`);
     }
+
+    // Interval to clean up expired entries every minute
+    setInterval(cleanUpExpiredLogs, 60 * 1000);
 });
