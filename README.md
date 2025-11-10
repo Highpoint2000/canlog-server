@@ -22,7 +22,7 @@ This plugin provides a central server to manage the FMLIST logs and DX alerts.
 
 The following variables can be changed in the header of the canlog_server.js:
 
-    const PORT = 2000; 		// Port on which the server should run
+    const PORT = 2000; 				// Port on which the server should run
     let LogInterval_FMLIST = 60; 	// Specify here in minutes when a log entry can be sent again (default: 30, minimum 30, off: 0) ---> for Scanner Plugin!
 	let LogInterval_DXALERT = 60; 	// Specify here in minutes when a alarm entry can be sent again (default: 60, minimum 1, off: 0)) ---> für DX-Alert Plugin!
 
